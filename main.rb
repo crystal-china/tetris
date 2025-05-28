@@ -128,13 +128,13 @@ end
   @score = nil
 end
 
-@reset = lambda do
+def reset
   @score, @figure = 0, nil
   reset_field
   @init_figure.call
 end
 
-@reset.call
+reset
 
 try_move = lambda do |dir|
   @x += dir
@@ -193,10 +193,10 @@ Window.on :key_down do |event|
     when "right" then try_move.call(+1) if @figure && !@paused
     when "up"    then try_rotate.call  if @figure && !@paused
     when "r"
-      @reset.call unless @paused
+      reset unless @paused
     when "p", "space"
       [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
-      @reset.call unless @score
+      reset unless @score
     end
   end
 end
