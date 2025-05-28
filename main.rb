@@ -32,6 +32,14 @@ def reset_field
   text_highscore.text = "Highscore: #{highscore}"
 end
 
+def mix(f)
+  @figure.each_with_index do |row, dy|
+    row.each_index do |dx|
+      @field[@y + dy][@x + dx] = (row[dx] if f) unless row[dx].zero?
+    end
+  end
+end
+
 render = lambda do
   reset_field
   w = @block_size * (2 + @field.first.size)
@@ -84,15 +92,6 @@ render = lambda do
   end
 end.call # render end
 
-
-mix = lambda do |f|     # add or subtract the figure from the field (call it before rendering)
-  @figure.each_with_index do |row, dy|
-    row.each_index do |dx|
-      @field[@y + dy][@x + dx] = (row[dx] if f) unless row[dx].zero?
-    end
-  end
-end
-
 collision = lambda do
   @figure.each_with_index.any? do |row, dy|
     row.each_with_index.any? do |a, dx|
@@ -104,9 +103,9 @@ collision = lambda do
       )
     end
   end or (
-    mix.call true
+    mix(true)
     render.call
-    mix.call false
+    mix(false)
     false
   )
 end
@@ -176,7 +175,7 @@ Window.update do
 
     @y -= 1
     # puts "FPS: #{(Window.frames.round - 1) / (current - first_time)}" if Window.frames.round > 1
-    mix.call true
+    mix(true)
     @field.partition(&:all?).tap do |a, b|
       @field = a.map { Array.new @field.first.size } + b
       @score += [0, 1, 3, 5, 8].fetch a.size
