@@ -10,9 +10,9 @@ class Tetris
     @prev = nil
     @margin = 1
     @block_size = 30 + 2 * @margin
-    @score = nil
-    @text_score = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
-    @text_level = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+    @score = 0
+    @text_score = Text.new(@score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
+    @text_level = Text.new(@score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
 
     @row_time = 0
     @figure = nil
@@ -43,6 +43,8 @@ class Tetris
       y: @block_size * 2
     )
 
+    @text_highscore = Text.new("", x: 5, y: 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
+
     @blocks = Array.new(@field.size) do |y|
       Array.new(@field.first.size) do |x|
         [
@@ -60,12 +62,6 @@ class Tetris
 
   def reset
     @score, @figure = 0, nil
-    reset_field
-    init_figure
-  end
-
-  def reset_field
-    text_highscore = Text.new("", x: 5, y: 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
     highscore = if File.exist?("#{Dir.home}/.rbtris")
                   File.read("#{Dir.home}/.rbtris").scan(/^1 .*?(\S+)$/).map(&:first).map(&:to_i).max
                 else
@@ -73,9 +69,12 @@ class Tetris
                 end
 
     @field = Array.new(20) { Array.new 10 }
-    text_highscore.text = "Highscore: #{highscore}"
-  end
 
+    @text_highscore.text = "Highscore: #{highscore}"
+
+    init_figure
+  end
+  
   def mix(f)
     @figure.each_with_index do |row, dy|
       row.each_index do |dx|
