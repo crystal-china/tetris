@@ -136,18 +136,18 @@ end
 
 reset
 
-try_move = lambda do |dir|
+def try_move(dir)
   @x += dir
 
-  next unless @collision.call
+  return unless @collision.call
 
   @x -= dir
 end
 
-try_rotate = lambda do
+def try_rotate
   @figure = @figure.reverse.transpose
 
-  next unless @collision.call
+  return unless @collision.call
 
   @figure = @figure.transpose.reverse
 end
@@ -189,9 +189,9 @@ Window.on :key_down do |event|
   @holding[event.key] = Time.now
   @semaphore.synchronize do
     case event.key
-    when "left"  then try_move.call(-1) if @figure && !@paused
-    when "right" then try_move.call(+1) if @figure && !@paused
-    when "up"    then try_rotate.call  if @figure && !@paused
+    when "left"  then try_move(-1) if @figure && !@paused
+    when "right" then try_move(+1) if @figure && !@paused
+    when "up"    then try_rotate  if @figure && !@paused
     when "r"
       reset unless @paused
     when "p", "space"
@@ -208,9 +208,9 @@ Window.on :key_held do |event|
       time_span = Time.now - @holding[key]
 
       case key
-      when "left"  then try_move.call(-1) if @figure &&  time_span >= 0.5
-      when "right" then try_move.call(+1) if @figure && time_span >= 0.5
-      when "up"    then try_rotate.call  if @figure && time_span >= 0.5
+      when "left"  then try_move(-1) if @figure &&  time_span >= 0.5
+      when "right" then try_move(+1) if @figure && time_span >= 0.5
+      when "up"    then try_rotate  if @figure && time_span >= 0.5
       when "down"
         @y += 1
         @prev = if @collision.call
