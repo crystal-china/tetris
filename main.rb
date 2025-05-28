@@ -5,13 +5,13 @@ class Tetris
   include Ruby2D::DSL
 
   def initialize
+    font = Font.path("PressStart2P-Regular.ttf")
     @semaphore = Mutex.new
     @field = Array.new(20) { Array.new(10) }
     @prev = nil
     @margin = 1
     @block_size = 30 + 2 * @margin
     @score = 0
-    font = Font.path("PressStart2P-Regular.ttf")
     @text_score = Text.new(@score, x: 5, y: @block_size + 5, z: 1, font: font)
     @text_level = Text.new(@score, x: 5, y: @block_size + 5, z: 1, font: font)
 
@@ -108,8 +108,8 @@ class Tetris
       row.each_with_index.any? do |a, dx|
         !(
           a.zero? ||
-          (0...@field.size).cover?(@y + dy) &&
-          (0...@field.first.size).cover?(@x + dx) &&
+          (0...@field.size).include?(@y + dy) &&
+          (0...@field.first.size).include?(@x + dx) &&
           !@field[@y + dy][@x + dx]
         )
       end
@@ -166,16 +166,19 @@ class Tetris
   def run
     Window.update do
       current = Time.now
+
       unless @paused
         @text_score.text = "Score: #{@score}"
         @text_score.x = Window.width - 5 - @text_score.width
       end
+
       @semaphore.synchronize do
         unless @paused
           level = (((@score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
           @text_level.text = "Level: #{level}"
           @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
         end
+
         @prev ||= current - @row_time
 
         next unless current >= @prev + @row_time
