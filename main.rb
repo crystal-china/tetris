@@ -13,12 +13,12 @@ require "ruby2d"
 @figure = nil
 @x = @y = nil
 
-paused = false
-pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
-pause_text = Text.new("press 'Space'", z: 1, font: Font.path("PressStart2P-Regular.ttf")).tap(&:remove)
-holding = {}
-pause_text.x = (Window.width - pause_text.width) / 2
-pause_text.y = (Window.height - pause_text.height) / 2
+@paused = false
+@pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
+@pause_text = Text.new("press 'Space'", z: 1, font: Font.path("PressStart2P-Regular.ttf")).tap(&:remove)
+@holding = {}
+@pause_text.x = (Window.width - @pause_text.width) / 2
+@pause_text.y = (Window.height - @pause_text.height) / 2
 
 reset_field = lambda do
   text_highscore = Text.new("", x: 5, y: 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
@@ -127,7 +127,7 @@ init_figure = lambda do
     f.puts "1 #{str}"
   end
 
-  [pause_rect, pause_text].each &((paused ^= true) ? :add : :remove)
+  [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
   @score = nil
 end
 
@@ -157,12 +157,12 @@ end
 
 Window.update do
   current = Time.now
-  unless paused
+  unless @paused
     @text_score.text = "Score: #{@score}"
     @text_score.x = Window.width - 5 - @text_score.width
   end
   @semaphore.synchronize do
-    unless paused
+    unless @paused
       level = (((@score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
       @text_level.text = "Level: #{level}"
       @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
@@ -171,7 +171,7 @@ Window.update do
     next unless current >= @prev + @row_time
 
     @prev += @row_time
-    next unless @figure && !paused
+    next unless @figure && !@paused
 
     @y += 1
     next unless collision.call
@@ -189,26 +189,26 @@ Window.update do
 end
 
 Window.on :key_down do |event|
-  holding[event.key] = Time.now
+  @holding[event.key] = Time.now
   @semaphore.synchronize do
     case event.key
-    when "left"  then try_move.call(-1) if @figure && !paused
-    when "right" then try_move.call(+1) if @figure && !paused
-    when "up"    then try_rotate.call  if @figure && !paused
+    when "left"  then try_move.call(-1) if @figure && !@paused
+    when "right" then try_move.call(+1) if @figure && !@paused
+    when "up"    then try_rotate.call  if @figure && !@paused
     when "r"
-      reset.call unless paused
+      reset.call unless @paused
     when "p", "space"
-      [pause_rect, pause_text].each &((paused ^= true) ? :add : :remove)
+      [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
       reset.call unless @score
     end
   end
 end
 
 Window.on :key_held do |event|
-  if !paused
+  if !@paused
     @semaphore.synchronize do
       key = event.key
-      time_span = Time.now - holding[key]
+      time_span = Time.now - @holding[key]
 
       case key
       when "left"  then try_move.call(-1) if @figure &&  time_span >= 0.5
