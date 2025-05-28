@@ -40,7 +40,7 @@ def mix(f)
   end
 end
 
-@render = lambda do
+def render
   reset_field
   w = @block_size * (2 + @field.first.size)
   h = @block_size * (3 + @field.size)
@@ -90,7 +90,9 @@ end
       end
     end
   end
-end.call # render end
+end
+
+@foo = render
 
 def collision
   @figure.each_with_index.any? do |row, dy|
@@ -104,7 +106,7 @@ def collision
     end
   end or (
     mix(true)
-    @render.call
+    @foo.call
     mix(false)
     false
   )
@@ -180,7 +182,7 @@ Window.update do
       @field = a.map { Array.new @field.first.size } + b
       @score += [0, 1, 3, 5, 8].fetch a.size
     end
-    @render.call
+    @foo.call
     init_figure
   end
 end
