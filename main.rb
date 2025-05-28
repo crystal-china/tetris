@@ -92,7 +92,7 @@ end
   end
 end.call # render end
 
-@collision = lambda do
+def collision
   @figure.each_with_index.any? do |row, dy|
     row.each_with_index.any? do |a, dx|
       !(
@@ -117,7 +117,7 @@ def init_figure
     ["0" * @figure.first.size] * (rest / 2) + @figure +
     ["0" * @figure.first.size] * (rest - rest / 2)
   ).map { |st| st.chars.map(&:to_i) }
-  return unless @collision.call
+  return unless collision
 
   File.open("#{Dir.home}/.rbtris", "a") do |f|
     str = "#{@text_level.text}   #{@text_score.text}".tap(&method(:puts))
@@ -139,7 +139,7 @@ reset
 def try_move(dir)
   @x += dir
 
-  return unless @collision.call
+  return unless collision
 
   @x -= dir
 end
@@ -147,7 +147,7 @@ end
 def try_rotate
   @figure = @figure.reverse.transpose
 
-  return unless @collision.call
+  return unless collision
 
   @figure = @figure.transpose.reverse
 end
@@ -171,7 +171,7 @@ Window.update do
     next unless @figure && !@paused
 
     @y += 1
-    next unless @collision.call
+    next unless collision
 
     @y -= 1
     # puts "FPS: #{(Window.frames.round - 1) / (current - first_time)}" if Window.frames.round > 1
@@ -213,7 +213,7 @@ Window.on :key_held do |event|
       when "up"    then try_rotate  if @figure && time_span >= 0.5
       when "down"
         @y += 1
-        @prev = if @collision.call
+        @prev = if collision
                   @y -= 1
                   Time.now - @row_time
                 else
