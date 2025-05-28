@@ -1,13 +1,3 @@
-unless File.exist? "PressStart2P-Regular.ttf"
-  require "open-uri"
-  require "zip"
-  tempfile = Tempfile.new "Press_Start_2P.zip"
-  File.binwrite tempfile, (
-                  Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.5") ? Kernel : URI
-                ).open("https://fonts.google.com/download?family=Press%20Start%202P", &:read)
-  Zip::File.open(tempfile){ |zip| zip.extract "PressStart2P-Regular.ttf", "PressStart2P-Regular.ttf" }
-end
-
 require "ruby2d"
 
 class Tetris
@@ -16,7 +6,7 @@ class Tetris
 
   def initialize
     @semaphore = Mutex.new
-    @field = nil
+    @field = Array.new(20) { Array.new 10 }
     @prev = nil
     @margin = 1
     @block_size = 30 + 2 * @margin
@@ -34,8 +24,6 @@ class Tetris
     @holding = {}
     @pause_text.x = (Window.width - @pause_text.width) / 2
     @pause_text.y = (Window.height - @pause_text.height) / 2
-
-    reset_field
     
     w = @block_size * (2 + @field.first.size)
     h = @block_size * (3 + @field.size)
