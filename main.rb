@@ -25,6 +25,38 @@ class Tetris
     @pause_text.x = (Window.width - @pause_text.width) / 2
     @pause_text.y = (Window.height - @pause_text.height) / 2
 
+    reset_field
+    
+    w = @block_size * (2 + @field.first.size)
+    h = @block_size * (3 + @field.size)
+    set width: w, height: h, title: "rbTris"
+
+    Rectangle.new(
+      width: w,
+      height: h,
+      color: "gray"
+    )
+
+    Rectangle.new(
+      width: w - 2 * @block_size,
+      height: h - 3 * @block_size,
+      color: "black",
+      x: @block_size,
+      y: @block_size * 2
+    )
+
+    @blocks = Array.new(@field.size) do |y|
+      Array.new(@field.first.size) do |x|
+        [
+          Square.new(
+            x: @margin + @block_size * (1 + x),
+            y: @margin + @block_size * (2 + y),
+            size: @block_size - 2 * @margin
+          )
+        ]
+      end
+    end
+
     reset
   end
 
@@ -54,44 +86,8 @@ class Tetris
     end
   end
 
-  def blocks
-    @blocks ||=
-      begin
-        reset_field
-        w = @block_size * (2 + @field.first.size)
-        h = @block_size * (3 + @field.size)
-        set width: w, height: h, title: "rbTris"
-
-        Rectangle.new(
-          width: w,
-          height: h,
-          color: "gray"
-        )
-
-        Rectangle.new(
-          width: w - 2 * @block_size,
-          height: h - 3 * @block_size,
-          color: "black",
-          x: @block_size,
-          y: @block_size * 2
-        )
-
-        Array.new(@field.size) do |y|
-          Array.new(@field.first.size) do |x|
-            [
-              Square.new(
-                x: @margin + @block_size * (1 + x),
-                y: @margin + @block_size * (2 + y),
-                size: @block_size - 2 * @margin
-              )
-            ]
-          end
-        end
-      end
-  end
-
   def render_blocks
-    blocks.each_with_index do |row, i|
+    @blocks.each_with_index do |row, i|
       row.each_with_index do |(block, drawn), j|
         if @field[i][j]
           unless drawn == true
@@ -144,7 +140,7 @@ class Tetris
     [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
     @score = nil
   end
-  
+
   def try_move(dir)
     @x += dir
 
@@ -175,15 +171,15 @@ class Tetris
           @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
         end
         @prev ||= current - @row_time
-        
+
         next unless current >= @prev + @row_time
 
         @prev += @row_time
-        
+
         next unless @figure && !@paused
 
         @y += 1
-        
+
         next unless collision
 
         @y -= 1
