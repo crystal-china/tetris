@@ -110,14 +110,14 @@ end.call # render end
   )
 end
 
-@init_figure = lambda do
+def init_figure
   @figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
   rest = @figure.first.size - @figure.size
   @x, @y, @figure = 3, 0, (
     ["0" * @figure.first.size] * (rest / 2) + @figure +
     ["0" * @figure.first.size] * (rest - rest / 2)
   ).map { |st| st.chars.map(&:to_i) }
-  next unless @collision.call
+  return unless @collision.call
 
   File.open("#{Dir.home}/.rbtris", "a") do |f|
     str = "#{@text_level.text}   #{@text_score.text}".tap(&method(:puts))
@@ -131,7 +131,7 @@ end
 def reset
   @score, @figure = 0, nil
   reset_field
-  @init_figure.call
+  init_figure
 end
 
 reset
@@ -181,7 +181,7 @@ Window.update do
       @score += [0, 1, 3, 5, 8].fetch a.size
     end
     @render.call
-    @init_figure.call
+    init_figure
   end
 end
 
