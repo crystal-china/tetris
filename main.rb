@@ -1,3 +1,13 @@
+unless File.exist? "PressStart2P-Regular.ttf"
+  require "open-uri"
+  require "zip"
+  tempfile = Tempfile.new "Press_Start_2P.zip"
+  File.binwrite tempfile, (
+                  Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.5") ? Kernel : URI
+                ).open("https://fonts.google.com/download?family=Press%20Start%202P", &:read)
+  Zip::File.open(tempfile){ |zip| zip.extract "PressStart2P-Regular.ttf", "PressStart2P-Regular.ttf" }
+end
+
 require "ruby2d"
 
 class Tetris
