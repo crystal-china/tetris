@@ -40,59 +40,60 @@ def mix(f)
   end
 end
 
-def render
-  reset_field
-  w = @block_size * (2 + @field.first.size)
-  h = @block_size * (3 + @field.size)
-  set width: w, height: h, title: "rbTris"
+def blocks
+  @blocks ||=
+    begin
+      reset_field
+      w = @block_size * (2 + @field.first.size)
+      h = @block_size * (3 + @field.size)
+      set width: w, height: h, title: "rbTris"
 
-  Rectangle.new(
-    width: w,
-    height: h,
-    color: "gray"
-  )
+      Rectangle.new(
+        width: w,
+        height: h,
+        color: "gray"
+      )
 
-  Rectangle.new(
-    width: w - 2 * @block_size,
-    height: h - 3 * @block_size,
-    color: "black",
-    x: @block_size,
-    y: @block_size * 2
-  )
+      Rectangle.new(
+        width: w - 2 * @block_size,
+        height: h - 3 * @block_size,
+        color: "black",
+        x: @block_size,
+        y: @block_size * 2
+      )
 
-  blocks = Array.new(@field.size) do |y|
-    Array.new(@field.first.size) do |x|
-      [
-        Square.new(
-          x: @margin + @block_size * (1 + x),
-          y: @margin + @block_size * (2 + y),
-          size: @block_size - 2 * @margin
-        )
-      ]
+      Array.new(@field.size) do |y|
+        Array.new(@field.first.size) do |x|
+          [
+            Square.new(
+              x: @margin + @block_size * (1 + x),
+              y: @margin + @block_size * (2 + y),
+              size: @block_size - 2 * @margin
+            )
+          ]
+        end
+      end
     end
-  end
+end
 
-  lambda do
-    blocks.each_with_index do |row, i|
-      row.each_with_index do |(block, drawn), j|
-        if @field[i][j]
-          unless drawn == true
-            block.color = %w{aqua yellow green red blue orange purple}[(@field[i][j] || 0) - 1]
-            block.add
-            row[j][1] = true
-          end
-        else
-          unless drawn == false
-            block.remove
-            row[j][1] = false
-          end
+def render_blocks
+  blocks.each_with_index do |row, i|
+    row.each_with_index do |(block, drawn), j|
+      if @field[i][j]
+        unless drawn == true
+          block.color = %w{aqua yellow green red blue orange purple}[(@field[i][j] || 0) - 1]
+          block.add
+          row[j][1] = true
+        end
+      else
+        unless drawn == false
+          block.remove
+          row[j][1] = false
         end
       end
     end
   end
 end
-
-@foo = render
 
 def collision
   @figure.each_with_index.any? do |row, dy|
@@ -106,7 +107,7 @@ def collision
     end
   end or (
     mix(true)
-    @foo.call
+    render_blocks
     mix(false)
     false
   )
@@ -182,7 +183,7 @@ Window.update do
       @field = a.map { Array.new @field.first.size } + b
       @score += [0, 1, 3, 5, 8].fetch a.size
     end
-    @foo.call
+    render_blocks
     init_figure
   end
 end
