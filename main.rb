@@ -1,10 +1,13 @@
 require "ruby2d"
 
-field = nil
+@semaphore = Mutex.new
+@field = nil
 block_size = 30 + 2 * margin = 1
 score = nil
 text_score = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
 text_level = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+prev, row_time = nil, 0
+figure = x = y = nil
 
 paused = false
 pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
@@ -22,15 +25,15 @@ reset_field = lambda do
               end
 
   lambda do
-    field = Array.new(20) { Array.new 10 }
+    @field = Array.new(20) { Array.new 10 }
     text_highscore.text = "Highscore: #{highscore}"
   end
 end.call # reset_field end
 
 render = lambda do
   reset_field.call
-  w = block_size * (2 + field.first.size)
-  h = block_size * (3 + field.size)
+  w = block_size * (2 + @field.first.size)
+  h = block_size * (3 + @field.size)
   set width: w, height: h, title: "rbTris"
 
   Rectangle.new(
@@ -47,8 +50,8 @@ render = lambda do
     y: block_size * 2
   )
 
-  blocks = Array.new(field.size) do |y|
-    Array.new(field.first.size) do |x|
+  blocks = Array.new(@field.size) do |y|
+    Array.new(@field.first.size) do |x|
       [
         Square.new(
           x: margin + block_size * (1 + x),
@@ -62,9 +65,9 @@ render = lambda do
   lambda do
     blocks.each_with_index do |row, i|
       row.each_with_index do |(block, drawn), j|
-        if field[i][j]
+        if @field[i][j]
           unless drawn == true
-            block.color = %w{aqua yellow green red blue orange purple}[(field[i][j] || 0) - 1]
+            block.color = %w{aqua yellow green red blue orange purple}[(@field[i][j] || 0) - 1]
             block.add
             row[j][1] = true
           end
@@ -79,11 +82,11 @@ render = lambda do
   end
 end.call # render end
 
-figure = x = y = nil
+
 mix = lambda do |f|     # add or subtract the figure from the field (call it before rendering)
   figure.each_with_index do |row, dy|
     row.each_index do |dx|
-      field[y + dy][x + dx] = (row[dx] if f) unless row[dx].zero?
+      @field[y + dy][x + dx] = (row[dx] if f) unless row[dx].zero?
     end
   end
 end
@@ -93,9 +96,9 @@ collision = lambda do
     row.each_with_index.any? do |a, dx|
       !(
         a.zero? ||
-        (0...field.size).cover?(y + dy) &&
-        (0...field.first.size).cover?(x + dx) &&
-        !field[y + dy][x + dx]
+        (0...@field.size).cover?(y + dy) &&
+        (0...@field.first.size).cover?(x + dx) &&
+        !@field[y + dy][x + dx]
       )
     end
   end or (
@@ -130,10 +133,6 @@ reset = lambda do
   init_figure.call
 end
 
-semaphore = Mutex.new
-
-prev, row_time = nil, 0
-
 reset.call
 
 try_move = lambda do |dir|
@@ -152,15 +151,13 @@ try_rotate = lambda do
   figure = figure.transpose.reverse
 end
 
-
-
 Window.update do
   current = Time.now
   unless paused
     text_score.text = "Score: #{score}"
     text_score.x = Window.width - 5 - text_score.width
   end
-  semaphore.synchronize do
+  @semaphore.synchronize do
     unless paused
       level = (((score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
       text_level.text = "Level: #{level}"
@@ -178,8 +175,8 @@ Window.update do
     y -= 1
     # puts "FPS: #{(Window.frames.round - 1) / (current - first_time)}" if Window.frames.round > 1
     mix.call true
-    field.partition(&:all?).tap do |a, b|
-      field = a.map { Array.new field.first.size } + b
+    @field.partition(&:all?).tap do |a, b|
+      @field = a.map { Array.new @field.first.size } + b
       score += [0, 1, 3, 5, 8].fetch a.size
     end
     render.call
@@ -189,7 +186,7 @@ end
 
 Window.on :key_down do |event|
   holding[event.key] = Time.now
-  semaphore.synchronize do
+  @semaphore.synchronize do
     case event.key
     when "left"  then try_move.call(-1) if figure && !paused
     when "right" then try_move.call(+1) if figure && !paused
@@ -205,7 +202,7 @@ end
 
 Window.on :key_held do |event|
   if !paused
-    semaphore.synchronize do
+    @semaphore.synchronize do
       key = event.key
       time_span = Time.now - holding[key]
 
