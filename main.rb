@@ -2,6 +2,16 @@ require "ruby2d"
 
 field = nil
 block_size = 30 + 2 * margin = 1
+score = nil
+text_score = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+text_level = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+
+paused = false
+pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
+pause_text = Text.new("press 'Space'", z: 1, font: Font.path("PressStart2P-Regular.ttf")).tap(&:remove)
+holding = {}
+pause_text.x = (Window.width - pause_text.width) / 2
+pause_text.y = (Window.height - pause_text.height) / 2
 
 reset_field = lambda do
   text_highscore = Text.new("", x: 5, y: 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
@@ -96,14 +106,6 @@ collision = lambda do
   )
 end
 
-score = nil
-text_score = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
-text_level = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
-
-paused = false
-pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
-pause_text = Text.new("press 'Space'", z: 1, font: Font.path("PressStart2P-Regular.ttf")).tap(&:remove)
-
 init_figure = lambda do
   figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
   rest = figure.first.size - figure.size
@@ -150,9 +152,7 @@ try_rotate = lambda do
   figure = figure.transpose.reverse
 end
 
-holding = {}
-pause_text.x = (Window.width - pause_text.width) / 2
-pause_text.y = (Window.height - pause_text.height) / 2
+
 
 Window.update do
   current = Time.now
