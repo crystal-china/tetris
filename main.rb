@@ -20,7 +20,7 @@ require "ruby2d"
 @pause_text.x = (Window.width - @pause_text.width) / 2
 @pause_text.y = (Window.height - @pause_text.height) / 2
 
-reset_field = lambda do
+def reset_field
   text_highscore = Text.new("", x: 5, y: 5, z: 1, font: Font.path("PressStart2P-Regular.ttf"))
   highscore = if File.exist?("#{Dir.home}/.rbtris")
                 File.read("#{Dir.home}/.rbtris").scan(/^1 .*?(\S+)$/).map(&:first).map(&:to_i).max
@@ -28,14 +28,12 @@ reset_field = lambda do
                 "---"
               end
 
-  lambda do
-    @field = Array.new(20) { Array.new 10 }
-    text_highscore.text = "Highscore: #{highscore}"
-  end
-end.call # reset_field end
+  @field = Array.new(20) { Array.new 10 }
+  text_highscore.text = "Highscore: #{highscore}"
+end
 
 render = lambda do
-  reset_field.call
+  reset_field
   w = @block_size * (2 + @field.first.size)
   h = @block_size * (3 + @field.size)
   set width: w, height: h, title: "rbTris"
@@ -133,7 +131,7 @@ end
 
 reset = lambda do
   @score, @figure = 0, nil
-  reset_field.call
+  reset_field
   init_figure.call
 end
 
@@ -217,11 +215,11 @@ Window.on :key_held do |event|
       when "down"
         @y += 1
         @prev = if collision.call
-                 @y -= 1
-                 Time.now - @row_time
-               else
-                 Time.now
-               end
+                  @y -= 1
+                  Time.now - @row_time
+                else
+                  Time.now
+                end
       end
     end
   end
