@@ -113,7 +113,7 @@ class Tetris
           !@field[@y + dy][@x + dx]
         )
       end
-    end or (
+    end || (
       mix(true)
       render_blocks
       mix(false)
@@ -122,12 +122,15 @@ class Tetris
   end
 
   def init_figure
+    @x, @y = 3, 0
     @figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
     rest = @figure.first.size - @figure.size
-    @x, @y, @figure = 3, 0, (
-      ["0" * @figure.first.size] * (rest / 2) + @figure +
+    @figure = (
+      ["0" * @figure.first.size] * (rest / 2) +
+      @figure +
       ["0" * @figure.first.size] * (rest - rest / 2)
     ).map { |st| st.chars.map(&:to_i) }
+
     return unless collision
 
     File.open("#{Dir.home}/.rbtris", "a") do |f|
