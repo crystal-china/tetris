@@ -25,7 +25,7 @@ class Tetris
     @holding = {}
     @pause_text.x = (Window.width - @pause_text.width) / 2
     @pause_text.y = (Window.height - @pause_text.height) / 2
-    
+
     w = @block_size * (2 + @field.first.size)
     h = @block_size * (3 + @field.size)
     set width: w, height: h, title: "rbTris"
@@ -75,7 +75,7 @@ class Tetris
 
     init_figure
   end
-  
+
   def mix(f)
     @figure.each_with_index do |row, dy|
       row.each_index do |dx|
@@ -135,7 +135,12 @@ class Tetris
       f.puts "1 #{str}"
     end
 
-    [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
+    if (@paused ^= true)
+      [@pause_rect, @pause_text].each(&:add)
+    else
+      [@pause_rect, @pause_text].each(&:remove)
+    end
+    
     @score = 0
   end
 
@@ -201,7 +206,12 @@ class Tetris
         when "up"    then try_rotate  if @figure && !@paused
         when "r"     then reset unless @paused
         when "p", "space"
-          [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
+          if (@paused ^= true)
+            [@pause_rect, @pause_text].each(&:add)
+          else
+            [@pause_rect, @pause_text].each(&:remove)
+          end
+          
           reset unless @score
         end
       end
