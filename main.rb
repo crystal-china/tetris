@@ -2,14 +2,16 @@ require "ruby2d"
 
 @semaphore = Mutex.new
 @field = nil
+@prev = nil
 @margin = 1
 @block_size = 30 + 2 * @margin
 @score = nil
-text_score = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
-text_level = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+@text_score = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+@text_level = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
 
-prev, row_time = nil, 0
-figure = x = y = nil
+row_time = 0
+@figure = nil
+x = y = nil
 
 paused = false
 pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
@@ -86,7 +88,7 @@ end.call # render end
 
 
 mix = lambda do |f|     # add or subtract the figure from the field (call it before rendering)
-  figure.each_with_index do |row, dy|
+  @figure.each_with_index do |row, dy|
     row.each_index do |dx|
       @field[y + dy][x + dx] = (row[dx] if f) unless row[dx].zero?
     end
@@ -94,7 +96,7 @@ mix = lambda do |f|     # add or subtract the figure from the field (call it bef
 end
 
 collision = lambda do
-  figure.each_with_index.any? do |row, dy|
+  @figure.each_with_index.any? do |row, dy|
     row.each_with_index.any? do |a, dx|
       !(
         a.zero? ||
@@ -112,16 +114,16 @@ collision = lambda do
 end
 
 init_figure = lambda do
-  figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
-  rest = figure.first.size - figure.size
-  x, y, figure = 3, 0, (
-    ["0" * figure.first.size] * (rest / 2) + figure +
-    ["0" * figure.first.size] * (rest - rest / 2)
+  @figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
+  rest = @figure.first.size - @figure.size
+  x, y, @figure = 3, 0, (
+    ["0" * @figure.first.size] * (rest / 2) + @figure +
+    ["0" * @figure.first.size] * (rest - rest / 2)
   ).map { |st| st.chars.map(&:to_i) }
   next unless collision.call
 
   File.open("#{Dir.home}/.rbtris", "a") do |f|
-    str = "#{text_level.text}   #{text_score.text}".tap(&method(:puts))
+    str = "#{@text_level.text}   #{@text_score.text}".tap(&method(:puts))
     f.puts "1 #{str}"
   end
 
@@ -130,7 +132,7 @@ init_figure = lambda do
 end
 
 reset = lambda do
-  @score, figure = 0, nil
+  @score, @figure = 0, nil
   reset_field.call
   init_figure.call
 end
@@ -146,30 +148,30 @@ try_move = lambda do |dir|
 end
 
 try_rotate = lambda do
-  figure = figure.reverse.transpose
+  @figure = @figure.reverse.transpose
 
   next unless collision.call
 
-  figure = figure.transpose.reverse
+  @figure = @figure.transpose.reverse
 end
 
 Window.update do
   current = Time.now
   unless paused
-    text_score.text = "Score: #{@score}"
-    text_score.x = Window.width - 5 - text_score.width
+    @text_score.text = "Score: #{@score}"
+    @text_score.x = Window.width - 5 - @text_score.width
   end
   @semaphore.synchronize do
     unless paused
       level = (((@score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
-      text_level.text = "Level: #{level}"
+      @text_level.text = "Level: #{level}"
       row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
     end
-    prev ||= current - row_time
-    next unless current >= prev + row_time
+    @prev ||= current - row_time
+    next unless current >= @prev + row_time
 
-    prev += row_time
-    next unless figure && !paused
+    @prev += row_time
+    next unless @figure && !paused
 
     y += 1
     next unless collision.call
@@ -190,9 +192,9 @@ Window.on :key_down do |event|
   holding[event.key] = Time.now
   @semaphore.synchronize do
     case event.key
-    when "left"  then try_move.call(-1) if figure && !paused
-    when "right" then try_move.call(+1) if figure && !paused
-    when "up"    then try_rotate.call  if figure && !paused
+    when "left"  then try_move.call(-1) if @figure && !paused
+    when "right" then try_move.call(+1) if @figure && !paused
+    when "up"    then try_rotate.call  if @figure && !paused
     when "r"
       reset.call unless paused
     when "p", "space"
@@ -209,12 +211,12 @@ Window.on :key_held do |event|
       time_span = Time.now - holding[key]
 
       case key
-      when "left"  then try_move.call(-1) if figure &&  time_span >= 0.5
-      when "right" then try_move.call(+1) if figure && time_span >= 0.5
-      when "up"    then try_rotate.call  if figure && time_span >= 0.5
+      when "left"  then try_move.call(-1) if @figure &&  time_span >= 0.5
+      when "right" then try_move.call(+1) if @figure && time_span >= 0.5
+      when "up"    then try_rotate.call  if @figure && time_span >= 0.5
       when "down"
         y += 1
-        prev = if collision.call
+        @prev = if collision.call
                  y -= 1
                  Time.now - row_time
                else
