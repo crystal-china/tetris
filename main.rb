@@ -2,10 +2,12 @@ require "ruby2d"
 
 @semaphore = Mutex.new
 @field = nil
-block_size = 30 + 2 * margin = 1
-score = nil
-text_score = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
-text_level = Text.new score, x: 5, y: block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+@margin = 1
+@block_size = 30 + 2 * @margin
+@score = nil
+text_score = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+text_level = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
+
 prev, row_time = nil, 0
 figure = x = y = nil
 
@@ -32,8 +34,8 @@ end.call # reset_field end
 
 render = lambda do
   reset_field.call
-  w = block_size * (2 + @field.first.size)
-  h = block_size * (3 + @field.size)
+  w = @block_size * (2 + @field.first.size)
+  h = @block_size * (3 + @field.size)
   set width: w, height: h, title: "rbTris"
 
   Rectangle.new(
@@ -43,20 +45,20 @@ render = lambda do
   )
 
   Rectangle.new(
-    width: w - 2 * block_size,
-    height: h - 3 * block_size,
+    width: w - 2 * @block_size,
+    height: h - 3 * @block_size,
     color: "black",
-    x: block_size,
-    y: block_size * 2
+    x: @block_size,
+    y: @block_size * 2
   )
 
   blocks = Array.new(@field.size) do |y|
     Array.new(@field.first.size) do |x|
       [
         Square.new(
-          x: margin + block_size * (1 + x),
-          y: margin + block_size * (2 + y),
-          size: block_size - 2 * margin
+          x: @margin + @block_size * (1 + x),
+          y: @margin + @block_size * (2 + y),
+          size: @block_size - 2 * @margin
         )
       ]
     end
@@ -124,11 +126,11 @@ init_figure = lambda do
   end
 
   [pause_rect, pause_text].each &((paused ^= true) ? :add : :remove)
-  score = nil
+  @score = nil
 end
 
 reset = lambda do
-  score, figure = 0, nil
+  @score, figure = 0, nil
   reset_field.call
   init_figure.call
 end
@@ -154,12 +156,12 @@ end
 Window.update do
   current = Time.now
   unless paused
-    text_score.text = "Score: #{score}"
+    text_score.text = "Score: #{@score}"
     text_score.x = Window.width - 5 - text_score.width
   end
   @semaphore.synchronize do
     unless paused
-      level = (((score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
+      level = (((@score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
       text_level.text = "Level: #{level}"
       row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
     end
@@ -177,7 +179,7 @@ Window.update do
     mix.call true
     @field.partition(&:all?).tap do |a, b|
       @field = a.map { Array.new @field.first.size } + b
-      score += [0, 1, 3, 5, 8].fetch a.size
+      @score += [0, 1, 3, 5, 8].fetch a.size
     end
     render.call
     init_figure.call
@@ -195,7 +197,7 @@ Window.on :key_down do |event|
       reset.call unless paused
     when "p", "space"
       [pause_rect, pause_text].each &((paused ^= true) ? :add : :remove)
-      reset.call unless score
+      reset.call unless @score
     end
   end
 end
