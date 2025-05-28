@@ -9,9 +9,9 @@ require "ruby2d"
 @text_score = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
 @text_level = Text.new @score, x: 5, y: @block_size + 5, z: 1, font: Font.path("PressStart2P-Regular.ttf")
 
-row_time = 0
+@row_time = 0
 @figure = nil
-x = y = nil
+@x = @y = nil
 
 paused = false
 pause_rect = Rectangle.new(width: Window.width, height: Window.height, color: [0.5, 0.5, 0.5, 0.75]).tap(&:remove)
@@ -90,7 +90,7 @@ end.call # render end
 mix = lambda do |f|     # add or subtract the figure from the field (call it before rendering)
   @figure.each_with_index do |row, dy|
     row.each_index do |dx|
-      @field[y + dy][x + dx] = (row[dx] if f) unless row[dx].zero?
+      @field[@y + dy][@x + dx] = (row[dx] if f) unless row[dx].zero?
     end
   end
 end
@@ -100,9 +100,9 @@ collision = lambda do
     row.each_with_index.any? do |a, dx|
       !(
         a.zero? ||
-        (0...@field.size).cover?(y + dy) &&
-        (0...@field.first.size).cover?(x + dx) &&
-        !@field[y + dy][x + dx]
+        (0...@field.size).cover?(@y + dy) &&
+        (0...@field.first.size).cover?(@x + dx) &&
+        !@field[@y + dy][@x + dx]
       )
     end
   end or (
@@ -116,7 +116,7 @@ end
 init_figure = lambda do
   @figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
   rest = @figure.first.size - @figure.size
-  x, y, @figure = 3, 0, (
+  @x, @y, @figure = 3, 0, (
     ["0" * @figure.first.size] * (rest / 2) + @figure +
     ["0" * @figure.first.size] * (rest - rest / 2)
   ).map { |st| st.chars.map(&:to_i) }
@@ -140,11 +140,11 @@ end
 reset.call
 
 try_move = lambda do |dir|
-  x += dir
+  @x += dir
 
   next unless collision.call
 
-  x -= dir
+  @x -= dir
 end
 
 try_rotate = lambda do
@@ -165,18 +165,18 @@ Window.update do
     unless paused
       level = (((@score / 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor  # outside of Mutex score is being accesses by render[]
       @text_level.text = "Level: #{level}"
-      row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
+      @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
     end
-    @prev ||= current - row_time
-    next unless current >= @prev + row_time
+    @prev ||= current - @row_time
+    next unless current >= @prev + @row_time
 
-    @prev += row_time
+    @prev += @row_time
     next unless @figure && !paused
 
-    y += 1
+    @y += 1
     next unless collision.call
 
-    y -= 1
+    @y -= 1
     # puts "FPS: #{(Window.frames.round - 1) / (current - first_time)}" if Window.frames.round > 1
     mix.call true
     @field.partition(&:all?).tap do |a, b|
@@ -215,10 +215,10 @@ Window.on :key_held do |event|
       when "right" then try_move.call(+1) if @figure && time_span >= 0.5
       when "up"    then try_rotate.call  if @figure && time_span >= 0.5
       when "down"
-        y += 1
+        @y += 1
         @prev = if collision.call
-                 y -= 1
-                 Time.now - row_time
+                 @y -= 1
+                 Time.now - @row_time
                else
                  Time.now
                end
