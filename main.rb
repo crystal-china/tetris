@@ -40,7 +40,7 @@ def mix(f)
   end
 end
 
-render = lambda do
+@render = lambda do
   reset_field
   w = @block_size * (2 + @field.first.size)
   h = @block_size * (3 + @field.size)
@@ -92,7 +92,7 @@ render = lambda do
   end
 end.call # render end
 
-collision = lambda do
+@collision = lambda do
   @figure.each_with_index.any? do |row, dy|
     row.each_with_index.any? do |a, dx|
       !(
@@ -104,20 +104,20 @@ collision = lambda do
     end
   end or (
     mix(true)
-    render.call
+    @render.call
     mix(false)
     false
   )
 end
 
-init_figure = lambda do
+@init_figure = lambda do
   @figure = %w{070 777 006 666 500 555 440 044 033 330 22 22 1111}.each_slice(2).to_a.sample
   rest = @figure.first.size - @figure.size
   @x, @y, @figure = 3, 0, (
     ["0" * @figure.first.size] * (rest / 2) + @figure +
     ["0" * @figure.first.size] * (rest - rest / 2)
   ).map { |st| st.chars.map(&:to_i) }
-  next unless collision.call
+  next unless @collision.call
 
   File.open("#{Dir.home}/.rbtris", "a") do |f|
     str = "#{@text_level.text}   #{@text_score.text}".tap(&method(:puts))
@@ -128,18 +128,18 @@ init_figure = lambda do
   @score = nil
 end
 
-reset = lambda do
+@reset = lambda do
   @score, @figure = 0, nil
   reset_field
-  init_figure.call
+  @init_figure.call
 end
 
-reset.call
+@reset.call
 
 try_move = lambda do |dir|
   @x += dir
 
-  next unless collision.call
+  next unless @collision.call
 
   @x -= dir
 end
@@ -147,7 +147,7 @@ end
 try_rotate = lambda do
   @figure = @figure.reverse.transpose
 
-  next unless collision.call
+  next unless @collision.call
 
   @figure = @figure.transpose.reverse
 end
@@ -171,7 +171,7 @@ Window.update do
     next unless @figure && !@paused
 
     @y += 1
-    next unless collision.call
+    next unless @collision.call
 
     @y -= 1
     # puts "FPS: #{(Window.frames.round - 1) / (current - first_time)}" if Window.frames.round > 1
@@ -180,8 +180,8 @@ Window.update do
       @field = a.map { Array.new @field.first.size } + b
       @score += [0, 1, 3, 5, 8].fetch a.size
     end
-    render.call
-    init_figure.call
+    @render.call
+    @init_figure.call
   end
 end
 
@@ -193,10 +193,10 @@ Window.on :key_down do |event|
     when "right" then try_move.call(+1) if @figure && !@paused
     when "up"    then try_rotate.call  if @figure && !@paused
     when "r"
-      reset.call unless @paused
+      @reset.call unless @paused
     when "p", "space"
       [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
-      reset.call unless @score
+      @reset.call unless @score
     end
   end
 end
@@ -213,7 +213,7 @@ Window.on :key_held do |event|
       when "up"    then try_rotate.call  if @figure && time_span >= 0.5
       when "down"
         @y += 1
-        @prev = if collision.call
+        @prev = if @collision.call
                   @y -= 1
                   Time.now - @row_time
                 else
