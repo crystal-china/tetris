@@ -1,0 +1,13 @@
+name: rbtris
+version: 0.1.0
+
+authors:
+  - Billy.Zheng <vil963@gmail.com>
+
+targets:
+  rbtris:
+    main: src/rbtris.cr
+
+crystal: '>= 1.16.3'
+
+license: MIT
