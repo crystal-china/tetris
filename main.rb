@@ -198,8 +198,7 @@ class Tetris
         when "left"  then try_move(-1) if @figure && !@paused
         when "right" then try_move(+1) if @figure && !@paused
         when "up"    then try_rotate  if @figure && !@paused
-        when "r"
-          reset unless @paused
+        when "r"     then reset unless @paused
         when "p", "space"
           [@pause_rect, @pause_text].each &((@paused ^= true) ? :add : :remove)
           reset unless @score
@@ -214,7 +213,7 @@ class Tetris
           time_span = Time.now - @holding[key]
 
           case key
-          when "left"  then try_move(-1) if @figure &&  time_span >= 0.5
+          when "left"  then try_move(-1) if @figure && time_span >= 0.5
           when "right" then try_move(+1) if @figure && time_span >= 0.5
           when "up"    then try_rotate  if @figure && time_span >= 0.5
           when "down"
