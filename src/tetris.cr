@@ -1,5 +1,6 @@
 require "sdl"
 require "sdl/ttf"
+require "./tetris/color"
 require "./tetris/block"
 require "./tetris/rectangle"
 require "./tetris/text"
@@ -44,7 +45,7 @@ class Tetris
     @background = Rectangle.new(
       @w,
       @h,
-      color: SDL::Color[128, 128, 128, 255], # gray
+      color: Color.gray,
       renderer: @renderer
     )
 
@@ -52,7 +53,7 @@ class Tetris
     @play_background = Rectangle.new(
       width: @w - 2 * @block_size,
       height: @h - 3 * @block_size,
-      color: SDL::Color[0, 0, 0, 255], # black
+      color: Color.black,
       renderer: @renderer,
       x: @block_size,
       y: @block_size*2
@@ -61,7 +62,7 @@ class Tetris
     @pause_rect = Rectangle.new(
       width: @w,
       height: @h,
-      color: SDL::Color[128, 128, 128, 255*0.75],
+      color: Color.gray(op: 0.75),
       renderer: @renderer
     )
     @pause_text = Text.new(text: "Press 'Space'", renderer: @renderer)
@@ -168,13 +169,8 @@ class Tetris
 
         if v
           colors = [
-            SDL::Color[0, 255, 255, 255], # Aqua 青
-            SDL::Color[255, 255, 0, 255], # Yellow 黄
-            SDL::Color[0, 128, 0, 255],   # Green 緑
-            SDL::Color[255, 0, 0, 255],   # Red 红
-            SDL::Color[0, 0, 255, 255],   # Blue 蓝
-            SDL::Color[255, 165, 0, 255], # Orange 橙
-            SDL::Color[128, 0, 128, 255], # Purple 紫
+            Color.aqua, Color.yellow, Color.green, Color.red,
+            Color.blue, Color.orange, Color.purple,
           ]
           block.color = colors[(v || 0) - 1]
           block.add unless block.drawn?
@@ -187,6 +183,8 @@ class Tetris
 
   def run
     loop do
+      @renderer.clear
+
       @background.show
       @play_background.show
 
@@ -196,8 +194,6 @@ class Tetris
       when SDL::Event::Keyboard
         break if event.mod.lctrl? && event.sym.q?
       end
-
-      # @renderer.clear
 
       current = Time.local
 

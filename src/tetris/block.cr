@@ -4,7 +4,7 @@ class Block
   getter? drawn
   setter color
 
-  def initialize(@x : Int32, @y : Int32, @size : Int32, @renderer : SDL::Renderer, @color : SDL::Color = SDL::Color[0, 0, 0, 255])
+  def initialize(@x : Int32, @y : Int32, @size : Int32, @renderer : SDL::Renderer, @color : SDL::Color = Color.black)
     @rect = SDL::Rect[@x, @y, @size, @size]
     @drawn = false
     # @original_color = @renderer.draw_color
@@ -17,7 +17,7 @@ class Block
   end
 
   def remove
-    @renderer.draw_color = SDL::Color[0, 0, 0, 255]
+    @renderer.draw_color = Color.black
     @renderer.fill_rect(@rect)
     @drawn = false
   end

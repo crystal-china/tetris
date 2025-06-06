@@ -3,7 +3,7 @@ class Text
   property x, y
   @surface : SDL::Surface
 
-  def initialize(@text : String, @renderer : SDL::Renderer, @x : Int32 = 0, @y : Int32 = 0, @color : SDL::Color = SDL::Color[255, 255, 255, 255], @font = FONT)
+  def initialize(@text : String, @renderer : SDL::Renderer, @x : Int32 = 0, @y : Int32 = 0, @color : SDL::Color = Color.white, @font = FONT)
     @surface = @font.render_shaded(@text, color: @color, background: @renderer.draw_color)
     @width = @surface.width
     @height = @surface.height
