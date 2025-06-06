@@ -1,12 +1,16 @@
-name: rbtris
+name: tetris
 version: 0.1.0
 
 authors:
   - Billy.Zheng <vil963@gmail.com>
 
 targets:
-  rbtris:
-    main: src/rbtris.cr
+  tetris:
+    main: src/tetris.cr
+
+dependencies:
+  sdl:
+    github: ysbaddaden/sdl.cr
 
 crystal: '>= 1.16.3'
 
