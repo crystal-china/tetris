@@ -182,8 +182,7 @@ class Tetris
   end
 
   def run(ch1, done)
-    ch2 = Channel(Nil).new
-    ch3 = Channel(Nil).new
+    next_chan = Channel(Nil).new
 
     spawn do
       loop do
@@ -196,31 +195,21 @@ class Tetris
 
         @renderer.present
 
-        ch2.send nil
-        ch3.send nil
+        next_chan.send nil
       end
     end
 
     spawn do
-      ch2.receive
+      next_chan.receive
 
       loop do
-        sleep 0.005.seconds
-        case (event = SDL::Event.wait)
+        case (event = SDL::Event.poll)
         when SDL::Event::Quit
           break
         when SDL::Event::Keyboard
           break if event.mod.lctrl? && event.sym.q?
         end
-      end
 
-      done.send nil
-    end
-
-    spawn do
-      ch3.receive
-
-      loop do
         sleep 0.005.seconds
         current = Time.local
 
