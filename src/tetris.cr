@@ -181,97 +181,73 @@ class Tetris
     end
   end
 
-  def run(ch1, done)
-    next_chan = Channel(Nil).new
+  def run
+    loop do
+      sleep 0.005.seconds
 
-    spawn do
-      loop do
-        sleep 0.005.seconds
-        ch1.receive
-
-        @renderer.clear
-        @background.show
-        @play_background.show
-
-        @renderer.present
-
-        next_chan.send nil
+      case (event = SDL::Event.poll)
+      when SDL::Event::Quit
+        break
+      when SDL::Event::Keyboard
+        break if event.mod.lctrl? && event.sym.q?
       end
-    end
 
-    spawn do
-      next_chan.receive
+      @renderer.clear
+      @background.show
+      @play_background.show
 
-      loop do
-        case (event = SDL::Event.poll)
-        when SDL::Event::Quit
-          break
-        when SDL::Event::Keyboard
-          break if event.mod.lctrl? && event.sym.q?
-        end
+      current = Time.local
 
-        sleep 0.005.seconds
-        current = Time.local
+      unless @paused
+        @text_score.text = "Score: #{@score}"
+        @text_score.x = @w - 5 - @text_score.width
+      end
 
+      @semaphore.synchronize do
         unless @paused
-          @text_score.text = "Score: #{@score}"
-          @text_score.x = @w - 5 - @text_score.width
+          # outside of Mutex score is being accesses by render[]
+          level = (((@score // 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor
+          @text_level.text = "Level: #{level}"
+          @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
         end
 
-        @semaphore.synchronize do
-          unless @paused
-            # outside of Mutex score is being accesses by render[]
-            level = (((@score // 5 + 0.125) * 2) ** 0.5 - 0.5 + 1e-6).floor
-            @text_level.text = "Level: #{level}"
-            @row_time = (0.8 - (level - 1) * 0.007) ** (level - 1)
-          end
+        @prev ||= current - @row_time.seconds
 
-          @prev ||= current - @row_time.seconds
+        prev = @prev.not_nil!
 
-          prev = @prev.not_nil!
+        next unless current >= prev + @row_time.seconds
 
-          next unless current >= prev + @row_time.seconds
+        prev += @row_time.seconds
 
-          prev += @row_time.seconds
+        @prev = prev
 
-          @prev = prev
+        next unless @figure && !@paused
 
-          next unless @figure && !@paused
+        @y += 1
 
-          @y += 1
+        next unless collision
 
-          next unless collision
+        @y -= 1
 
-          @y -= 1
+        mix(true)
 
-          mix(true)
-
-          @field.partition(&.all?).tap do |a, b|
-            @field = a.map { Array(Int32?).new @field.first.size } + b
-            @score += [0, 1, 3, 5, 8][a.size]
-          end
-
-          render_blocks
-          init_figure
+        @field.partition(&.all?).tap do |a, b|
+          @field = a.map { Array(Int32?).new @field.first.size } + b
+          @score += [0, 1, 3, 5, 8][a.size]
         end
 
-        # @text_score.show
-        # @text_level.show
-        # @text_highscore.show
-
-        @renderer.present
+        render_blocks
+        init_figure
       end
+
+      # @text_score.show
+      # @text_level.show
+      # @text_highscore.show
+
+      @renderer.present
     end
   end
 end
 
 tetris = Tetris.new
-
-ch1 = Channel(Nil).new
-done = Channel(Nil).new
-
-tetris.run(ch1, done)
-
-loop { ch1.send nil }
-
-done.receive
+tetris.run
