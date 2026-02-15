@@ -1,0 +1,26 @@
+version: 2.0
+shards:
+  dot_display:
+    git: https://github.com/sleepinginsomniac/dot_display.git
+    version: 0.1.0+git.commit.58d7d2487bc1ef98d046f75492b0770506d99843
+
+  pf2d:
+    git: https://github.com/sleepinginsomniac/pf2d.git
+    version: 0.4.5
+
+  pf3d:
+    git: https://github.com/sleepinginsomniac/pf3d.git
+    version: 0.1.4
+
+  pixelfaucet:
+    git: https://github.com/sleepinginsomniac/pixelfaucet.git
+    version: 0.2.3
+
+  pixelfont:
+    git: https://github.com/sleepinginsomniac/pixelfont.git
+    version: 1.1.1
+
+  sdl3:
+    git: https://github.com/sleepinginsomniac/sdl3.cr.git
+    version: 0.2.1
+
