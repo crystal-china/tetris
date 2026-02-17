@@ -19,8 +19,8 @@ class FallingBlocks < PF::Game
   @time_to_settle = 0.3.seconds
   @settle = 0.seconds
   @soft_drop_hold_time = 0.0
-  @soft_drop_max_speed = 50.0
-  @soft_drop_ramp_duration = 0.5
+  @soft_drop_max_speed = 80.0
+  @soft_drop_ramp_duration = 0.3
 
   def initialize(*args, **kwargs)
     super
@@ -33,9 +33,13 @@ class FallingBlocks < PF::Game
 
     keys.map({
       Key::Code::D      => "right",
+      Key::Code::Right  => "right",
       Key::Code::A      => "left",
+      Key::Code::Left   => "left",
       Key::Code::S      => "soft drop",
+      Key::Code::Down   => "soft drop",
       Key::Code::W      => "rotate right",
+      Key::Code::Up     => "rotate right",
       Key::Code::Z      => "rotate left",
       Key::Code::X      => "rotate right",
       Key::Code::Space  => "hard drop",
