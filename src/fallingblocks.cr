@@ -196,10 +196,13 @@ class FallingBlocks < PF::Game
         @settle = 0.seconds
         @soft_drop_hold_time = 0.0
       elsif keys["soft drop"].held?
-        @soft_drop_hold_time += ds
-        soft_drop_ratio = {@soft_drop_hold_time / @soft_drop_ramp_duration, 1.0}.min
-        soft_drop_speed = @soft_drop_max_speed * soft_drop_ratio
-        @falling.pos += Vec[0.0, soft_drop_speed] * ds
+        unless collides?
+          @soft_drop_hold_time += ds
+          soft_drop_ratio = {@soft_drop_hold_time / @soft_drop_ramp_duration, 1.0}.min
+          soft_drop_speed = @soft_drop_max_speed * soft_drop_ratio
+          @falling.pos += Vec[0.0, soft_drop_speed] * ds
+          # pp soft_drop_speed, @falling.pos, "\n"
+        end
       else
         @soft_drop_hold_time = 0.0
       end
