@@ -1,7 +1,8 @@
 class FallingBlocks < PF::Game
   include PF
+  PIXEL_5X7 = {{ read_file("#{__DIR__}/../lib/pixelfont/fonts/pixel-5x7.txt") }}
 
-  @font : Pixelfont::Font = Pixelfont::Font.new("#{__DIR__}/../lib/pixelfont/fonts/pixel-5x7.txt")
+  @font : Pixelfont::Font = Pixelfont::Font.new(io: IO::Memory.new(PIXEL_5X7))
   @field = PF2d::Grid(UInt8).new(WIDTH, HEIGHT) do |p, s|
     p.x == 0 || p.x == s.x - 1 || p.y == s.y - 1 ? 8u8 : 0u8
   end
