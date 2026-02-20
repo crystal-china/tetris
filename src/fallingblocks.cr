@@ -51,8 +51,11 @@ class FallingBlocks < PF::Game
   end
 
   def collides?(at : Vec2(Int))
-    clip = @field.clip(Rect[at, @falling.size])
-    @falling.any? { |(p, v)| v > 0 && clip[p]?.try { |o| o > 0 } }
+    @falling.any? do |(p, v)|
+      next false unless v > 0
+      cell = @field[at + p]?
+      cell.nil? || cell > 0
+    end
   end
 
   def collides?
@@ -80,6 +83,21 @@ class FallingBlocks < PF::Game
 
   def collides_down?
     collides?(@falling.pos.to_i + Vec[0, 1])
+  end
+
+  # Split large vertical movement into cell-sized steps so we never skip collisions.
+  def fall_by(distance : Float64)
+    remaining = distance
+    while remaining > 0.0
+      break if collides_down?
+
+      frac = @falling.pos.y - @falling.pos.y.floor
+      max_step = frac > 0.0 ? 1.0 - frac : 1.0
+      step = {remaining, max_step}.min
+
+      @falling.pos.y = @falling.pos.y + step
+      remaining -= step
+    end
   end
 
   def try_move(dx : Int32)
@@ -201,7 +219,7 @@ class FallingBlocks < PF::Game
           @soft_drop_hold_time += ds
           soft_drop_ratio = {@soft_drop_hold_time / @soft_drop_ramp_duration, 1.0}.min
           soft_drop_speed = @soft_drop_max_speed * soft_drop_ratio
-          @falling.pos += Vec[0.0, soft_drop_speed] * ds
+          fall_by(soft_drop_speed * ds)
           # pp soft_drop_speed, @falling.pos, "\n"
         end
       else
@@ -222,7 +240,7 @@ class FallingBlocks < PF::Game
           end
         end
       else
-        @falling.pos += Vec[0.0, @fall_speed + (@cleared // 10)] * ds
+        fall_by((@fall_speed + (@cleared // 10)) * ds)
       end
 
       @line_blink.update(delta_time) do
